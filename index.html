@@ -120,26 +120,26 @@
         return;
       }
 
-      // === Network check ===
+            // === REQUEST ACCOUNT FIRST (must be first user action) ===
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
       const provider = new ethers.BrowserProvider(window.ethereum);
       const network = await provider.getNetwork();
 
+      // === Base network check ===
       if (Number(network.chainId) !== BASE_CHAIN_ID) {
         try {
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x2105' }], // 8453 hex
+            params: [{ chainId: '0x2105' }], // Base Mainnet
           });
         } catch (err) {
-          alert("Please switch to Base Network");
+          alert('Please switch to Base Network');
           return;
         }
       }
 
-            // Request wallet connection (IMPORTANT)
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-      const signer = await provider.getSigner()();
+      const signer = await provider.getSigner()()();
       if (!window.ethereum) {
         alert("Please install MetaMask or Coinbase Wallet");
         return;
