@@ -136,7 +136,10 @@
         }
       }
 
-      const signer = await provider.getSigner();
+            // Request wallet connection (IMPORTANT)
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      const signer = await provider.getSigner()();
       if (!window.ethereum) {
         alert("Please install MetaMask or Coinbase Wallet");
         return;
