@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>$x402 Holder Airdrop</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #2563eb, #3b82f6, #60a5fa);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f172a;
+    }
+    .card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      padding: 24px;
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    p {
+      margin: 6px 0;
+      font-size: 14px;
+      color: #475569;
+    }
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .address {
+      word-break: break-all;
+      font-size: 12px;
+      background: #f1f5f9;
+      padding: 8px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .eligible {
+      color: #16a34a;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .not-eligible {
+      color: #dc2626;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+    .footer {
+      border-top: 1px solid #e5e7eb;
+      margin-top: 18px;
+      padding-top: 12px;
+      font-size: 12px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>$x402 Holder Airdrop</h1>
+    <p>Connect your wallet to check airdrop eligibility</p>
+
+    <button id="connectBtn">Connect Wallet</button>
+
+    <div id="walletInfo" style="display:none;">
+      <div class="address" id="walletAddress"></div>
+      <p><strong>Balance:</strong> <span id="balance">0</span> $x402</p>
+      <div id="status"></div>
+    </div>
+
+    <div class="footer">
+      <p>Requirements:</p>
+      <p>• Minimum holding: <strong>100,000 $x402</strong></p>
+      <p>• Holding duration: <strong>30 days</strong></p>
+      <p><em>* 30 days holding verified off-chain</em></p>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN_ADDRESS = "0xYourX402TokenAddress"; // ganti address token
+    const MIN_HOLDING = 100000;
+
+    const ERC20_ABI = [
+      "function balanceOf(address) view returns (uint256)",
+      "function decimals() view returns (uint8)"
+    ];
+
+    const BASE_CHAIN_ID = 8453; // Base Mainnet
+
+    const connectBtn = document.getElementById("connectBtn");
+    const walletInfo = document.getElementById("walletInfo");
+    const walletAddress = document.getElementById("walletAddress");
+    const balanceEl = document.getElementById("balance");
+    const statusEl = document.getElementById("status");
+
+    connectBtn.onclick = async () => {
+      if (!window.ethereum) {
+        alert("Please install MetaMask or Coinbase Wallet");
+        return;
+      }
+
+      // === Network check ===
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+
+      if (Number(network.chainId) !== BASE_CHAIN_ID) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x2105' }], // 8453 hex
+          });
+        } catch (err) {
+          alert("Please switch to Base Network");
+          return;
+        }
+      }
+
+      const signer = await provider.getSigner();
+      if (!window.ethereum) {
+        alert("Please install MetaMask or Coinbase Wallet");
+        return;
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+
+      walletAddress.textContent = address;
+      walletInfo.style.display = "block";
+      connectBtn.style.display = "none";
+
+      const token = new ethers.Contract(TOKEN_ADDRESS, ERC20_ABI, provider);
+      const decimals = await token.decimals();
+      const rawBalance = await token.balanceOf(address);
+      const balance = Number(ethers.formatUnits(rawBalance, decimals));
+
+      balanceEl.textContent = balance.toLocaleString();
+
+      if (balance >= MIN_HOLDING) {
+        statusEl.innerHTML = "<div class='eligible'>✅ Eligible for Airdrop</div>";
+      } else {
+        statusEl.innerHTML = "<div class='not-eligible'>❌ Not Eligible</div>";
+      }
+    };
+  </script>
+</body>
+</html>
